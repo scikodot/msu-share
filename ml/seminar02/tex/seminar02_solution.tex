@@ -72,7 +72,26 @@
 	\]
 	
     \section{Оптимальный средний риск}
-    Найдём оптимальный средний риск:
+    Имеем:
+    \[
+    	\begin{aligned}
+    		R^* &= \iint L(a^*(x), y) p(x, y) \,dx\,dy \\
+    		&= \iint \lambda_y [a^*(x) \neq y] p(x | y) P(y) \,dx\,dy \\
+    		&= \iint \lambda_y (1 - [a^*(x) = y]) p(x | y) P(y) \,dx\,dy \\
+    		&= \int \underset{y}{\min} \ \lambda_y p(x | y) P(y) \,dx\,dy \\
+    		&= \int \underset{y}{\min} \ \{ \lambda_{-} p(x | y = -1) P(y = -1), \lambda_{+} p(x | y = +1) P(y = +1) \} \,dx\,dy \\
+    		&= \int \underset{y}{\min} \ \{ f(x), g(x) \} \,dx\,dy.
+    	\end{aligned}
+    \]
+    
+    Аналогично пункту 1, получаем:
+    \[
+    	\begin{aligned}
+    		R^* &= \int_{-\infty}^{x_0} g(x) \,dx + \int_{x_0}^{3} f(x) \,dx + \int_{3}^{+\infty} g(x) \,dx \\
+    		&= \int_{0}^{x_0} 0.2 \,dx + \int_{x_0}^{3} \frac{0.8}{\pi (1 + x^2)} \,dx \\
+    		&= 0.2 x_0 + \frac{0.8}{\pi} (\arctan{3} - \arctan{x_0}) \approx 0.299958 \approx 0.3.
+    	\end{aligned}
+    \]
 
     \section{Наивный байесовский классификатор}
     Найдём наивный байесовский классификатор так:
