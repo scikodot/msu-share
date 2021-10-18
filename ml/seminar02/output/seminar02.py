@@ -1,7 +1,7 @@
-import numpy as np
+import math
 
 def a1(x):
-    return 1 if np.sqrt(4 / np.pi - 1) <= x <= 3 else -1
+    return 1 if 0.5227232008770634 <= x <= 3 else -1
     
 def R():
     return 0.299958
@@ -19,8 +19,8 @@ def a2(x):
     s12, s22 = 1.0109836175071003, 1.918251875918784
 
     # Distributions
-    f = lambda x1, x2 : py1/(2*np.pi*s11*s21) * np.exp(-1/2*(((x1-m11)/s11)**2 + ((x2-m21)/s21)**2))
-    g = lambda x1, x2 : py2/(2*np.pi*s12*s22) * np.exp(-1/2*(((x1-m12)/s12)**2 + ((x2-m22)/s22)**2))
+    f = lambda x1, x2 : py1/(2*math.pi*s11*s21) * math.exp(-1/2*(((x1-m11)/s11)**2 + ((x2-m21)/s21)**2))
+    g = lambda x1, x2 : py2/(2*math.pi*s12*s22) * math.exp(-1/2*(((x1-m12)/s12)**2 + ((x2-m22)/s22)**2))
 
     # Classify
     return -1 if f(*x) >= g(*x) else 1
