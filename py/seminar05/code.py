@@ -62,8 +62,10 @@ def process(df):
     return df5
 
 if __name__ == '__main__':
-    # Input
+    # Directory
     dir = os.path.dirname(__file__)
+
+    # Input
     df = pd.read_csv(os.path.join(dir, "input/data.csv"), index_col=False)
 
     # Process
