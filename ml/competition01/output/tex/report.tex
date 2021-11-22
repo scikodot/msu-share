@@ -1,0 +1,79 @@
+\documentclass{beamer}
+\usetheme{Boadilla}
+\usefonttheme{serif}
+
+\AtBeginEnvironment{frame}{\setcounter{footnote}{0}}
+\addtobeamertemplate{footnote}{}{\vspace{2ex}}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{mathtext}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+
+\usepackage{csquotes}
+
+%\graphicspath{ {./materials/} }
+
+\title[competition01]{Решение задачи соревнования \\ по курсу \enquote{Машинное обучение}}
+\subtitle{}
+\author{Денисов Д.М.}
+\institute[мехмат МГУ]{Механико-математический факультет МГУ имени М.В. Ломоносова}
+\date{}
+
+\begin{document}
+	\begin{frame}
+		\titlepage
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Восстановление пропусков}
+		Данные разнородны, заменять на одно значение смысла мало \newline
+		$\implies$ используем KNN \newline
+		
+		Параметры: 5 соседей, веса пропорциональны расстояниям.
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Настройка классификатора}
+		Выбираем классификатор KNN и проводим кросс-валидацию на случайной десятой части тренировочной выборки по следующей сетке гиперпараметров:
+		\begin{alignat*}{3}
+			&algorithm &&: [kd\_tree, ball\_tree] \\
+			&n\_neighbors &&: [1, 3, 5, 7, 9] \\
+			&weights &&: [distance]
+			\intertext{Получаем:}
+			&algorithm &&: kd\_tree \\
+			&n\_neighbors &&: 9 \\
+			&weights &&: distance
+		\end{alignat*}
+		
+		Количество соседей получилось равным максимальному \newline
+		$\implies$ может быть и больше...
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Настройка классификатора}
+		Меняем сетку гиперпараметров, увеличивая максимальное число соседей:
+		\begin{alignat*}{3}
+			&algorithm &&: [kd\_tree, ball\_tree] \\
+			&n\_neighbors &&: [1, \ldots, 20] \\
+			&weights &&: [distance]
+			\intertext{Получаем:}
+			&algorithm &&: kd\_tree \\
+			&n\_neighbors &&: 13 \\
+			&weights &&: distance
+		\end{alignat*}
+		
+		Действительно, 13 соседей подходят больше.
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Обучение}
+		Обучаем на десятой части тренировочной выборки \newline
+		$\implies$ accuracy $\sim\! 90,5\%$. \newline
+		
+		Обучаем на всей тренировочной выборке \newline
+		$\implies$ accuracy $\sim\! 95,4\%$.
+	\end{frame}
+\end{document}
