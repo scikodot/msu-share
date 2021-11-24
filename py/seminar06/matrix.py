@@ -6,13 +6,13 @@ Pylint должен показывать 10 баллов.
 Кроме того, следует добавить поддержку исключений в отмеченных местах.
 Для проверки корректности алгоритмов следует сравнить результаты с соответствующими функциями numpy.
 """
-import math
 import random
-import json
 import copy
 import numpy as np
 
 class Matrix:
+    """Matrix class with basic operations"""
+
     def __init__(self, nrows, ncols, init='zeros'):
         """Конструктор класса Matrix.
         Создаёт матрицу резмера nrows x ncols и инициализирует её методом init.
@@ -26,10 +26,10 @@ class Matrix:
         """
         if nrows < 0 or ncols < 0:
             raise ValueError("Matrix dimensions cannot be negative.")
-        
+
         self.nrows = nrows
         self.ncols = ncols
-        
+
         if init == 'zeros':
             self.data = [[0.] * ncols for _ in range(nrows)]
         elif init == 'ones':
@@ -39,13 +39,14 @@ class Matrix:
             for i in range(min(nrows, ncols)):
                 self.data[i][i] = 1.
         elif init == 'random':
-            self.data = [[random.random() for _ in range(ncols)] for _ in range(nrows)]
+            self.data = [[random.random() for _ in range(ncols)]
+                                          for _ in range(nrows)]
         else:
             raise ValueError("Inappropriate init method.")
-    
+
     @staticmethod
     def from_dict(data):
-        "Десериализация матрицы из словаря"
+        """Десериализация матрицы из словаря"""
         ncols = data['ncols']
         nrows = data['nrows']
         items = data['data']
@@ -55,10 +56,10 @@ class Matrix:
             for col in range(ncols):
                 result[(row, col)] = items[ncols*row + col]
         return result
-    
+
     @staticmethod
     def to_dict(matr):
-        "Сериализация матрицы в словарь"
+        """Сериализация матрицы в словарь"""
         assert isinstance(matr, Matrix)
         nrows, ncols = matr.shape()
         data = []
@@ -66,7 +67,7 @@ class Matrix:
             for col in range(ncols):
                 data.append(matr[(row, col)])
         return {'nrows': nrows, 'ncols': ncols, 'data': data}
-    
+
     def __str__(self):
         res = ""
         max_len = 0
@@ -75,9 +76,9 @@ class Matrix:
         for i in range(self.nrows):
             for j in range(self.ncols):
                 txt = f"{float(self[(i, j)]):.4f}"
-                l = len(txt)
-                if l > max_len:
-                    max_len = l
+                len_ = len(txt)
+                if len_ > max_len:
+                    max_len = len_
 
         # Get matrix string
         for i in range(self.nrows):
@@ -87,38 +88,38 @@ class Matrix:
             for j in range(self.ncols):
                 if j > 0:
                     res += ' '
-                txt = "{0:.4f}".format(float(self[(i, j)]))
-                l = len(txt)
-                for _ in range(max_len - l):
+                txt = f"{float(self[(i, j)]):.4f}"
+                len_ = len(txt)
+                for _ in range(max_len - len_):
                     res += ' '
                 res += txt
             res += ']'
-        
+
         return res
-    
+
     def __repr__(self):
         return f"Matrix({self.data})"
-    
+
     def shape(self):
-        "Вернуть кортеж размера матрицы (nrows, ncols)"
+        """Вернуть кортеж размера матрицы (nrows, ncols)"""
         return self.nrows, self.ncols
-    
+
     def __getitem__(self, index):
         """Получить элемент матрицы по индексу index
         index - список или кортеж, содержащий два элемента
         """
         if not isinstance(index, (tuple, list)):
             raise ValueError("Inappropriate index type.")
-        
+
         if len(index) != 2:
             raise ValueError("Inappropriate index size.")
-        
+
         row, col = index
         if row < 0 or row >= self.nrows or col < 0 or col >= self.ncols:
             raise IndexError("Index out of bounds.")
-        
+
         return self.data[row][col]
-    
+
     def __setitem__(self, index, value):
         """Задать элемент матрицы по индексу index
         index - список или кортеж, содержащий два элемента
@@ -126,18 +127,18 @@ class Matrix:
         """
         if not isinstance(index, (tuple, list)):
             raise ValueError("Inappropriate index type.")
-        
+
         if len(index) != 2:
             raise ValueError("Inappropriate index size.")
-        
+
         row, col = index
         if row < 0 or row >= self.nrows or col < 0 or col >= self.ncols:
             raise IndexError("Index out of bounds.")
-        
+
         self.data[row][col] = value
-    
+
     def __sub__(self, rhs):
-        "Вычесть матрицу rhs и вернуть результат"
+        """Вычесть матрицу rhs и вернуть результат"""
         if rhs.nrows != self.nrows or rhs.ncols != self.ncols:
             raise ValueError("Inappropriate RHS matrix size.")
 
@@ -145,11 +146,11 @@ class Matrix:
         for i in range(lhs.nrows):
             for j in range(lhs.ncols):
                 lhs[(i, j)] -= rhs[(i, j)]
-        
+
         return lhs
-    
+
     def __add__(self, rhs):
-        "Сложить с матрицей rhs и вернуть результат"
+        """Сложить с матрицей rhs и вернуть результат"""
         if rhs.nrows != self.nrows or rhs.ncols != self.ncols:
             raise ValueError("Inappropriate RHS matrix size.")
 
@@ -157,11 +158,11 @@ class Matrix:
         for i in range(lhs.nrows):
             for j in range(lhs.ncols):
                 lhs[(i, j)] += rhs[(i, j)]
-        
+
         return lhs
-    
+
     def __mul__(self, rhs):
-        "Умножить на матрицу rhs и вернуть результат"
+        """Умножить на матрицу rhs и вернуть результат"""
         if rhs.nrows != self.ncols:
             raise ValueError("Inappropriate RHS matrix size.")
 
@@ -172,32 +173,32 @@ class Matrix:
                 for k in range(self.ncols):
                     elem += self[(i, k)] * rhs[(k, j)]
                 lhs[(i, j)] = elem
-        
+
         return lhs
-    
+
     def __pow__(self, power):
-        "Возвести все элементы в степень pow и вернуть результат"
+        """Возвести все элементы в степень pow и вернуть результат"""
         lhs = copy.deepcopy(self)
         for i in range(lhs.nrows):
             for j in range(lhs.ncols):
                 lhs[(i, j)] **= power
 
         return lhs
-    
+
     def sum(self):
-        "Вернуть сумму всех элементов матрицы"
+        """Вернуть сумму всех элементов матрицы"""
         sum_ = 0
         for i in range(self.nrows):
             for j in range(self.ncols):
                 sum_ += self[(i, j)]
 
         return sum_
-        
+
     def det(self):
-        "Вычислить определитель матрицы"
+        """Вычислить определитель матрицы"""
         if self.nrows != self.ncols:
             raise ArithmeticError("Matrix is not square.")
-        
+
         lhs = copy.deepcopy(self)
         det_ = 1.
 
@@ -207,7 +208,7 @@ class Matrix:
             pos = i
             while pos < self.nrows and lhs[(pos, i)] == 0:
                 pos += 1
-            
+
             # Swap rows
             if i < pos < self.nrows:
                 lhs.data[i], lhs.data[pos] = lhs.data[pos], lhs.data[i]
@@ -216,7 +217,7 @@ class Matrix:
             # Column of zeros => zero det
             if pos == self.nrows:
                 return 0
-            
+
             scale = 1 / lhs[(i, i)]
             for j in range(pos + 1, self.nrows):
                 elem = lhs[(j, i)]
@@ -229,24 +230,21 @@ class Matrix:
             det_ *= lhs[(i, i)]
 
         return det_
-    
+
     def transpose(self):
-        "Транспонировать матрицу и вернуть результат"
+        """Транспонировать матрицу и вернуть результат"""
         lhs = Matrix(self.ncols, self.nrows)
         for i in range(lhs.nrows):
             for j in range(lhs.ncols):
                 lhs[(i, j)] = self[(j, i)]
 
         return lhs
-    
+
     def inv(self):
-        "Вычислить обратную матрицу и вернуть результат"
+        """Вычислить обратную матрицу и вернуть результат"""
         if self.nrows != self.ncols:
             raise ArithmeticError("Matrix is not square.")
-        
-        #if self.det() == 0:
-        #    raise ArithmeticError("Matrix is degenerate.")
-        
+
         lhs = copy.deepcopy(self)
         rhs = Matrix(self.nrows, self.ncols, init='eye')
 
@@ -256,7 +254,7 @@ class Matrix:
             pos = i
             while pos < self.nrows and lhs[(pos, i)] == 0:
                 pos += 1
-            
+
             # Swap rows
             if i < pos < self.nrows:
                 lhs.data[i], lhs.data[pos] = lhs.data[pos], lhs.data[i]
@@ -280,71 +278,122 @@ class Matrix:
                 for k in range(self. ncols):
                     lhs[(j, k)] -= elem * lhs[(i, k)]
                     rhs[(j, k)] -= elem * rhs[(i, k)]
-        
+
         return rhs
 
     def tonumpy(self):
-        "Приведение к массиву numpy"
+        """Приведение к массиву numpy"""
         return np.array(self.data)
 
-def test_init(args):
-    print("Launching test init...")
-    for i in range(len(args)):
-        try:
-            Matrix(*args[i])
-        except Exception as e:
-            print(f"On arg {i}: {e}")
 
-def test_det(args):
-    print("Launching test det...")
-    for i in range(len(args)):
-        try:
-            arg1 = args[i].det()
-            arg2 = np.linalg.det(args[i].tonumpy())
-            assert np.isclose(arg1, arg2), "Assertion failed."
-        except Exception as e:
-            print(f"On arg {i}: {e}")
+def test_sub(arg):
+    """Test subtraction operation"""
+    arg1 = (arg[0] - arg[1]).tonumpy()
+    arg2 = np.subtract(arg[0].tonumpy(), arg[1].tonumpy())
+    assert np.allclose(arg1, arg2)
 
-def test_inv(args):
-    print("Launching test inv...")
-    for i in range(len(args)):
+def test_add(arg):
+    """Test addition operation"""
+    arg1 = (arg[0] + arg[1]).tonumpy()
+    arg2 = np.add(arg[0].tonumpy(), arg[1].tonumpy())
+    assert np.allclose(arg1, arg2)
+
+def test_mul(arg):
+    """Test multiplication operation"""
+    arg1 = (arg[0] * arg[1]).tonumpy()
+    arg2 = arg[0].tonumpy() @ arg[1].tonumpy()
+    assert np.allclose(arg1, arg2)
+
+def test_pow(arg):
+    """Test power operation"""
+    arg1 = (arg ** np.e).tonumpy()
+    arg2 = np.power(arg.tonumpy(), np.e)
+    assert np.allclose(arg1, arg2)
+
+def test_init(arg):
+    """Test initialization operation"""
+    Matrix(*arg)
+
+def test_sum(arg):
+    """Test sum operation"""
+    arg1 = arg.sum()
+    arg2 = np.sum(arg.tonumpy())
+    assert np.isclose(arg1, arg2), "Assertion failed."
+
+def test_det(arg):
+    """Test determinant operation"""
+    arg1 = arg.det()
+    arg2 = np.linalg.det(arg.tonumpy())
+    assert np.isclose(arg1, arg2), "Assertion failed."
+
+def test_transpose(arg):
+    """Test transpose operation"""
+    arg1 = arg.transpose().tonumpy()
+    arg2 = np.transpose(arg.tonumpy())
+    assert np.allclose(arg1, arg2), "Assertion failed."
+
+def test_inv(arg):
+    """Test inverse operation"""
+    arg1 = arg.inv().tonumpy()
+    arg2 = np.linalg.inv(arg.tonumpy())
+    assert np.allclose(arg1, arg2), "Assertion failed."
+
+def test_common(method, args):
+    """Common test method"""
+    print(f"Asserting {method.__name__}...")
+    for num, arg in enumerate(args):
         try:
-            arg1 = args[i].inv().tonumpy()
-            arg2 = np.linalg.inv(args[i].tonumpy())
-            assert np.allclose(arg1, arg2), "Assertion failed."
-        except Exception as e:
-            print(f"On arg {i}: {e}")
+            method(arg)
+        except (ValueError, IndexError,
+                ArithmeticError, AssertionError) as ex:
+            print(f"On arg {num}: {ex}")
 
 def test():
+    """Test method"""
+    # Initialization
     data = [
-        (-1, 3), 
-        (3, -1), 
-        (0, 0), 
-        (3, 3), 
-        (3, 3, 'ones'), 
-        (3, 3, 'eye'), 
+        (-1, 3),
+        (3, -1),
+        (0, 0),
+        (3, 3),
+        (3, 3, 'ones'),
+        (3, 3, 'eye'),
         (3, 3, 'random'),
         (3, 3, 'skew')
     ]
-    test_init(data)
 
+    test_common(test_init, data)
+
+    # Unary operations
     data = [
-        Matrix(3, 3), 
-        Matrix(3, 3, 'ones',), 
-        Matrix(3, 3, 'eye'), 
-        Matrix(3, 3, 'random')
+        Matrix(3, 3),
+        Matrix(3, 3, 'ones',),
+        Matrix(3, 3, 'eye'),
+        Matrix(3, 3, 'random'),
+        Matrix(3, 3),
+        Matrix(3, 3),
+        Matrix(4, 9, 'random'),
+        Matrix(7, 3, 'random')
     ]
+    data[4].data = [[1, 2, 3],
+                    [4, 5, 6],
+                    [7, 8, 9]]
+    data[5].data = [[1.2,   3.45,   6.789],
+                    [12.3,  45.67,  89.012],
+                    [123.4, 567.89, 12.345]]
 
-    m1 = Matrix(3, 3)
-    m1.data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-    data.append(m1)
+    test_common(test_pow, data)
+    test_common(test_sum, data)
+    test_common(test_det, data)
+    test_common(test_transpose, data)
+    test_common(test_inv, data)
 
-    m2 = Matrix(3, 3)
-    m2.data = [[1.2, 3.45, 6.789], [12.3, 45.67, 89.012], [123.4, 567.89, 12.345]]
-    data.append(m2)
+    # Binary operations
+    data = [(data[i], data[i + 1]) for i in range(len(data) - 1)]
 
-    test_det(data)
-    test_inv(data)
+    test_common(test_sub, data)
+    test_common(test_add, data)
+    test_common(test_mul, data)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     test()
