@@ -13,7 +13,7 @@ import copy
 import numpy as np
 
 class Matrix:
-    def __init__(self, nrows, ncols, init="zeros"):
+    def __init__(self, nrows, ncols, init='zeros'):
         """Конструктор класса Matrix.
         Создаёт матрицу резмера nrows x ncols и инициализирует её методом init.
         nrows - количество строк матрицы
@@ -39,16 +39,16 @@ class Matrix:
             for i in range(min(nrows, ncols)):
                 self.data[i][i] = 1.
         elif init == 'random':
-            self.data = [[random.random()] * ncols for _ in range(nrows)]
+            self.data = [[random.random() for _ in range(ncols)] for _ in range(nrows)]
         else:
             raise ValueError("Inappropriate init method.")
     
     @staticmethod
     def from_dict(data):
         "Десериализация матрицы из словаря"
-        ncols = data["ncols"]
-        nrows = data["nrows"]
-        items = data["data"]
+        ncols = data['ncols']
+        nrows = data['nrows']
+        items = data['data']
         assert len(items) == ncols*nrows
         result = Matrix(nrows, ncols)
         for row in range(nrows):
@@ -65,7 +65,7 @@ class Matrix:
         for row in range(nrows):
             for col in range(ncols):
                 data.append(matr[(row, col)])
-        return {"nrows": nrows, "ncols": ncols, "data": data}
+        return {'nrows': nrows, 'ncols': ncols, 'data': data}
     
     def __str__(self):
         res = ""
@@ -97,7 +97,7 @@ class Matrix:
         return res
     
     def __repr__(self):
-        return f"Matrix {self.nrows}x{self.ncols}"
+        return f"Matrix({self.data})"
     
     def shape(self):
         "Вернуть кортеж размера матрицы (nrows, ncols)"
@@ -203,13 +203,29 @@ class Matrix:
 
         # Perform Gaussian elimination
         for i in range(self.nrows):
-            scale = 1 / lhs[(i, i)]
-            for j in range(i + 1, self.nrows):
-                s = scale * lhs[(j, i)]
-                for k in range(self. ncols):
-                    lhs[(j, k)] -= s * lhs[(i, k)]
+            # Search for the first non-zero element
+            pos = i
+            while pos < self.nrows and lhs[(pos, i)] == 0:
+                pos += 1
+            
+            # Swap rows
+            if i < pos < self.nrows:
+                lhs.data[i], lhs.data[pos] = lhs.data[pos], lhs.data[i]
+                det_ *= -1
 
-            # Update determinant
+            # Column of zeros => zero det
+            if pos == self.nrows:
+                return 0
+            
+            scale = 1 / lhs[(i, i)]
+            for j in range(pos + 1, self.nrows):
+                elem = lhs[(j, i)]
+                if elem == 0:
+                    continue
+                ratio = scale * elem
+                for k in range(self.ncols):
+                    lhs[(j, k)] -= ratio * lhs[(i, k)]
+
             det_ *= lhs[(i, i)]
 
         return det_
@@ -228,29 +244,42 @@ class Matrix:
         if self.nrows != self.ncols:
             raise ArithmeticError("Matrix is not square.")
         
-        if self.det() == 0:
-            raise ArithmeticError("Matrix is degenerate.")
+        #if self.det() == 0:
+        #    raise ArithmeticError("Matrix is degenerate.")
         
         lhs = copy.deepcopy(self)
         rhs = Matrix(self.nrows, self.ncols, init='eye')
 
         # Perform Gaussian elimination
         for i in range(self.nrows):
-            # Scale
+            # Search for the first non-zero element
+            pos = i
+            while pos < self.nrows and lhs[(pos, i)] == 0:
+                pos += 1
+            
+            # Swap rows
+            if i < pos < self.nrows:
+                lhs.data[i], lhs.data[pos] = lhs.data[pos], lhs.data[i]
+                rhs.data[i], rhs.data[pos] = rhs.data[pos], rhs.data[i]
+
+            # Column of zeros => zero det
+            if pos == self.nrows:
+                raise ArithmeticError("Matrix is degenerate.")
+
+            # Scale row
             scale = 1 / lhs[(i, i)]
             for j in range(self.ncols):
                 lhs[(i, j)] *= scale
                 rhs[(i, j)] *= scale
 
-            # Eliminate
-            for j in range(self.nrows):
-                if j == i:
+            # Eliminate column elements
+            for j in [*range(i), *range(pos + 1, self.nrows)]:
+                elem = lhs[(j, i)]
+                if elem == 0:
                     continue
-
-                s = lhs[(j, i)]
                 for k in range(self. ncols):
-                    lhs[(j, k)] -= s * lhs[(i, k)]
-                    rhs[(j, k)] -= s * rhs[(i, k)]
+                    lhs[(j, k)] -= elem * lhs[(i, k)]
+                    rhs[(j, k)] -= elem * rhs[(i, k)]
         
         return rhs
 
@@ -258,10 +287,64 @@ class Matrix:
         "Приведение к массиву numpy"
         return np.array(self.data)
 
+def test_init(args):
+    print("Launching test init...")
+    for i in range(len(args)):
+        try:
+            Matrix(*args[i])
+        except Exception as e:
+            print(f"On arg {i}: {e}")
+
+def test_det(args):
+    print("Launching test det...")
+    for i in range(len(args)):
+        try:
+            arg1 = args[i].det()
+            arg2 = np.linalg.det(args[i].tonumpy())
+            assert np.isclose(arg1, arg2), "Assertion failed."
+        except Exception as e:
+            print(f"On arg {i}: {e}")
+
+def test_inv(args):
+    print("Launching test inv...")
+    for i in range(len(args)):
+        try:
+            arg1 = args[i].inv().tonumpy()
+            arg2 = np.linalg.inv(args[i].tonumpy())
+            assert np.allclose(arg1, arg2), "Assertion failed."
+        except Exception as e:
+            print(f"On arg {i}: {e}")
+
 def test():
-    eye = Matrix(3, 3, init='eye')
-    eye.tonumpy()
-    assert eye.det() == np.linalg.det(eye.tonumpy())
+    data = [
+        (-1, 3), 
+        (3, -1), 
+        (0, 0), 
+        (3, 3), 
+        (3, 3, 'ones'), 
+        (3, 3, 'eye'), 
+        (3, 3, 'random'),
+        (3, 3, 'skew')
+    ]
+    test_init(data)
+
+    data = [
+        Matrix(3, 3), 
+        Matrix(3, 3, 'ones',), 
+        Matrix(3, 3, 'eye'), 
+        Matrix(3, 3, 'random')
+    ]
+
+    m1 = Matrix(3, 3)
+    m1.data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    data.append(m1)
+
+    m2 = Matrix(3, 3)
+    m2.data = [[1.2, 3.45, 6.789], [12.3, 45.67, 89.012], [123.4, 567.89, 12.345]]
+    data.append(m2)
+
+    test_det(data)
+    test_inv(data)
 
 if __name__ == "__main__":
     test()
