@@ -179,20 +179,12 @@ class Matrix:
     def __pow__(self, power):
         """Возвести все элементы в степень pow и вернуть результат"""
         lhs = copy.deepcopy(self)
-        for i in range(lhs.nrows):
-            for j in range(lhs.ncols):
-                lhs[(i, j)] **= power
-
+        lhs.data = [[elem ** power for elem in row] for row in lhs.data]
         return lhs
 
     def sum(self):
         """Вернуть сумму всех элементов матрицы"""
-        sum_ = 0
-        for i in range(self.nrows):
-            for j in range(self.ncols):
-                sum_ += self[(i, j)]
-
-        return sum_
+        return sum([sum(row) for row in self.data])
 
     def det(self):
         """Вычислить определитель матрицы"""
@@ -234,10 +226,7 @@ class Matrix:
     def transpose(self):
         """Транспонировать матрицу и вернуть результат"""
         lhs = Matrix(self.ncols, self.nrows)
-        for i in range(lhs.nrows):
-            for j in range(lhs.ncols):
-                lhs[(i, j)] = self[(j, i)]
-
+        lhs.data = [list(col) for col in zip(*self.data)]
         return lhs
 
     def inv(self):
@@ -285,6 +274,15 @@ class Matrix:
         """Приведение к массиву numpy"""
         return np.array(self.data)
 
+def test_init(arg):
+    """Test initialization operation"""
+    Matrix(*arg)
+
+def test_getset(arg):
+    """Test get/set operations"""
+    mat = Matrix(3, 3, 'ones')
+    mat[arg] = 0
+    assert mat[arg] == 0, "Assertion failed."
 
 def test_sub(arg):
     """Test subtraction operation"""
@@ -309,10 +307,6 @@ def test_pow(arg):
     arg1 = (arg ** np.e).tonumpy()
     arg2 = np.power(arg.tonumpy(), np.e)
     assert np.allclose(arg1, arg2)
-
-def test_init(arg):
-    """Test initialization operation"""
-    Matrix(*arg)
 
 def test_sum(arg):
     """Test sum operation"""
@@ -361,8 +355,11 @@ def test():
         (3, 3, 'random'),
         (3, 3, 'skew')
     ]
-
     test_common(test_init, data)
+
+    # Getter/setter
+    data = [0, (1,), (2, 3, 4), (0, 0)]
+    test_common(test_getset, data)
 
     # Unary operations
     data = [
@@ -378,10 +375,9 @@ def test():
     data[4].data = [[1, 2, 3],
                     [4, 5, 6],
                     [7, 8, 9]]
-    data[5].data = [[1.2,   3.45,   6.789],
-                    [12.3,  45.67,  89.012],
-                    [123.4, 567.89, 12.345]]
-
+    data[5].data = [[1.2,   3.45,   6.789  ],
+                    [12.3,  45.67,  89.012 ],
+                    [123.4, 567.89, 123.456]]
     test_common(test_pow, data)
     test_common(test_sum, data)
     test_common(test_det, data)
@@ -390,7 +386,6 @@ def test():
 
     # Binary operations
     data = [(data[i], data[i + 1]) for i in range(len(data) - 1)]
-
     test_common(test_sub, data)
     test_common(test_add, data)
     test_common(test_mul, data)
